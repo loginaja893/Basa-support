@@ -254,3 +254,67 @@ def get_hints(category: int) -> List[str]:
 
 def get_first_hint(category: int) -> str:
     hints = HINTS.get(category, [])
+    return hints[0] if hints else "No hints for this category."
+
+
+# -----------------------------------------------------------------------------
+# Hash and session ID
+# -----------------------------------------------------------------------------
+
+
+def sha256_hex(data: bytes) -> str:
+    return hashlib.sha256(data).hexdigest()
+
+
+def session_id_from(reporter_hex: str, category: int, nonce: int) -> str:
+    payload = f"{NAMESPACE}:{reporter_hex}:{category}:{nonce}"
+    return sha256_hex(payload.encode("utf-8"))
+
+
+def step_hash_from(session_id: str, step_index: int, description: str) -> str:
+    payload = f"{session_id}:{step_index}:{description or ''}"
+    return sha256_hex(payload.encode("utf-8"))
+
+
+def resolution_hash_from(session_id: str, summary: str) -> str:
+    payload = f"{session_id}:{summary or ''}"
+    return sha256_hex(payload.encode("utf-8"))
+
+
+# -----------------------------------------------------------------------------
+# Session manager
+# -----------------------------------------------------------------------------
+
+
+class SessionManager:
+    def __init__(self, state: Optional[BasaState] = None):
+        self.state = state or BasaState()
+
+    def open_session(self, reporter_hex: str, category: int) -> str:
+        if self.state.paused:
+            raise RuntimeError("Basa-support: registry paused")
+        if category < 1 or category > CATEGORY_COUNT:
+            raise ValueError("Basa-support: invalid category")
+        if self.state.category_counts.get(category, 0) >= self.state.category_caps.get(category, MAX_SESSIONS_PER_CATEGORY):
+            raise RuntimeError("Basa-support: category cap reached")
+        reporter_hex = reporter_hex or ZERO_HEX
+        self.state.session_counter += 1
+        sid = session_id_from(reporter_hex, category, self.state.session_counter)
+        if sid in self.state.sessions:
+            raise RuntimeError("Basa-support: session id collision")
+        self.state.sessions[sid] = DiagnosticSession(
+            session_id=sid,
+            reporter_hex=reporter_hex,
+            category=category,
+            opened_at_ts=datetime.now(timezone.utc).timestamp(),
+            resolved=False,
+            resolution_hash="",
+            outcome=OUTCOME_NONE,
+            step_count=0,
+            steps=[],
+        )
+        self.state.category_counts[category] = self.state.category_counts.get(category, 0) + 1
+        return sid
+
+    def record_step(self, session_id: str, step_index: int, step_hash: str) -> None:
+        if session_id not in self.state.sessions:

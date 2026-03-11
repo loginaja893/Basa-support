@@ -382,3 +382,67 @@ def build_report(session: DiagnosticSession, include_hints: bool = True) -> str:
         f"Resolved: {session.resolved}",
         f"Outcome: {session.outcome}",
         f"Step count: {session.step_count}",
+        "",
+    ]
+    if include_hints:
+        lines.append("## Suggested steps")
+        for i, h in enumerate(get_hints(session.category), 1):
+            lines.append(f"{i}. {h}")
+        lines.append("")
+    return "\n".join(lines)
+
+
+# -----------------------------------------------------------------------------
+# Stats
+# -----------------------------------------------------------------------------
+
+
+def stats_summary(manager: SessionManager) -> str:
+    total = len(manager.state.sessions)
+    resolved = sum(1 for s in manager.state.sessions.values() if s.resolved)
+    lines = [
+        f"Total sessions: {total}",
+        f"Resolved: {resolved}",
+        "By category:",
+    ]
+    for c in range(1, CATEGORY_COUNT + 1):
+        count = manager.state.category_counts.get(c, 0)
+        lines.append(f"  {get_category_label(c)}: {count}")
+    return "\n".join(lines)
+
+
+# -----------------------------------------------------------------------------
+# Diagnostic flows (step-by-step scripts per category)
+# -----------------------------------------------------------------------------
+
+FLOWS: Dict[int, List[str]] = {
+    1: [
+        "Start: User reports connectivity issue.",
+        "Step 1: Confirm scope (one device vs all, one site vs all).",
+        "Step 2: Check physical link (cable/Wi‑Fi icon).",
+        "Step 3: Run ping to gateway.",
+        "Step 4: Run ping to 8.8.8.8.",
+        "Step 5: If gateway fails, check router and NIC.",
+        "Step 6: If 8.8.8.8 fails, check DNS or WAN.",
+        "Step 7: Flush DNS cache.",
+        "Step 8: Try different DNS server.",
+        "Step 9: Disable VPN/proxy temporarily.",
+        "Step 10: Check firewall rules.",
+        "Step 11: Restart network stack (netsh winsock reset).",
+        "Step 12: Escalate to ISP or network admin if WAN issue.",
+    ],
+    2: [
+        "Start: User reports disk full or errors.",
+        "Step 1: Check free space (all volumes).",
+        "Step 2: Run Disk Cleanup or Storage Sense.",
+        "Step 3: Identify largest folders (TreeSize/WinDirStat).",
+        "Step 4: Remove temp, cache, or old installers.",
+        "Step 5: Empty Recycle Bin and clear downloads.",
+        "Step 6: Check cloud sync local cache size.",
+        "Step 7: Run CHKDSK if errors reported.",
+        "Step 8: Check SMART status if available.",
+        "Step 9: Consider moving user data to another drive.",
+        "Step 10: Disable hibernation to free space if needed.",
+        "Step 11: Remove Windows.old if present after upgrade.",
+        "Step 12: Escalate to backup/replace if hardware failure.",
+    ],

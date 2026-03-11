@@ -190,3 +190,67 @@ HINTS: Dict[int, List[str]] = {
         "Review site permissions (camera, mic, location).",
     ],
     5: [
+        "Update device driver from manufacturer or Windows Update.",
+        "Uninstall device and scan for hardware changes.",
+        "Roll back driver if issue started after update.",
+        "Check Device Manager for yellow exclamation marks.",
+        "Ensure USB/Thunderbolt controller drivers are current.",
+        "Try another port or cable.",
+        "Install manufacturer-specific utility (e.g. Logitech, Dell).",
+        "Check for firmware update for the device.",
+        "Disable USB selective suspend in power options.",
+        "Verify device works on another machine.",
+        "Remove duplicate or ghost devices in Device Manager.",
+        "Check Group Policy for driver installation restrictions.",
+    ],
+    6: [
+        "Calibrate battery (full discharge then full charge).",
+        "Check power plan (Balanced/High performance).",
+        "Reduce screen brightness and close heavy apps.",
+        "Disable unused USB devices and wake-on-LAN if not needed.",
+        "Review Task Manager for background apps using CPU.",
+        "Replace battery if health is low (manufacturer tool).",
+        "Check power adapter and cable; try another if possible.",
+        "Update BIOS for power management fixes.",
+        "Disable fast startup (can cause wake/sleep issues).",
+        "Check outlet and surge protector.",
+        "Verify hibernation and sleep settings.",
+        "Run power report: powercfg /batteryreport (Windows).",
+    ],
+    7: [
+        "Check cable connections (HDMI/DisplayPort).",
+        "Update graphics driver from GPU vendor (NVIDIA/AMD/Intel).",
+        "Set correct resolution and refresh rate in display settings.",
+        "Try another monitor or TV to isolate.",
+        "Disable multiple display and re-enable.",
+        "Roll back graphics driver if issue after update.",
+        "Check for overheating (clean fans, repaste).",
+        "Run display troubleshooter (Windows).",
+        "Disable hardware acceleration in apps if artifacts.",
+        "Verify monitor OSD settings (input source).",
+        "Try different cable (e.g. HDMI 2.0 for 4K).",
+        "Reset monitor to factory defaults.",
+    ],
+    8: [
+        "Check physical volume and mute buttons.",
+        "Set correct output device (speakers/headphones).",
+        "Run audio troubleshooter (Windows).",
+        "Update or reinstall audio driver.",
+        "Disable audio enhancements (Windows Sound properties).",
+        "Verify default format (e.g. 24-bit 48000 Hz).",
+        "Check app-specific volume (mixer).",
+        "Unplug and replug USB/3.5mm device.",
+        "Reset sound settings to default.",
+        "Check for conflicting audio software.",
+        "Verify HDMI/DisplayPort audio if using monitor speakers.",
+        "Test with another device to isolate hardware.",
+    ],
+}
+
+
+def get_hints(category: int) -> List[str]:
+    return list(HINTS.get(category, []))
+
+
+def get_first_hint(category: int) -> str:
+    hints = HINTS.get(category, [])
